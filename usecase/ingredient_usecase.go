@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"github/revaldimijaya/tablelink/model"
 	"github/revaldimijaya/tablelink/repository"
 )
@@ -15,20 +16,35 @@ func NewIngredientUsecase(repo *repository.IngredientRepository) *IngredientUsec
 }
 
 func (u *IngredientUsecase) GetAll(pagination int, offset int) ([]model.Ingredient, error) {
-	return u.repo.GetAll(pagination, offset)
+	return u.repo.GetAll(model.Filter{
+		Pagination: pagination,
+		Offset:     offset,
+	})
 }
 
 func (u *IngredientUsecase) Create(ingredient model.Ingredient) error {
-	existing, _ := u.repo.GetAll(1, 0)
-	for _, ing := range existing {
-		if ing.Name == ingredient.Name {
-			return errors.New("ingredient name must be unique")
-		}
+	fmt.Printf("%+v\n", ingredient)
+	existing, _ := u.repo.GetAll(model.Filter{
+		Name:       ingredient.Name,
+		Pagination: 1,
+		Offset:     0,
+	})
+	fmt.Printf("%+v\n", existing)
+	if len(existing) != 0 {
+		return errors.New("ingredient name must be unique")
 	}
 	return u.repo.Create(ingredient)
 }
 
 func (u *IngredientUsecase) Update(ingredient model.Ingredient) error {
+	existing, _ := u.repo.GetAll(model.Filter{
+		Name:       ingredient.Name,
+		Pagination: 1,
+		Offset:     0,
+	})
+	if len(existing) != 0 {
+		return errors.New("ingredient name must be unique")
+	}
 	return u.repo.Update(ingredient)
 }
 
